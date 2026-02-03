@@ -8,3 +8,7 @@ class UserCreate(UserBase):
 
 class UserReponse(UserBase):
     id: str
+
+class UserPublic(BaseModel):
+    id: str
+    email: str

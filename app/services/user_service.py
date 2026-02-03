@@ -3,7 +3,7 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate
 from app.core.exceptions import AppException
-
+from app.core.security import Security
 
 class UserService:
 
@@ -19,6 +19,8 @@ class UserService:
     @classmethod
     async def register(cls, user: UserCreate) -> User:
         await cls._validate_email(user.email)
+
+        user.password = Security.hash_password(user.password)
 
         user_model = User(**user.model_dump())
         return await UserRepository.create(user_model)
