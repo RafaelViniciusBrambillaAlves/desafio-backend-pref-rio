@@ -5,6 +5,9 @@ from app.core.security import Security
 from app.core.exceptions import AppException
 from app.schemas.user import UserPublic 
 from app.core.jwt import JWTService
+import httpx
+from app.core.config import settings
+from app.models.user import User
 
 class AuthService:
 
@@ -55,4 +58,58 @@ class AuthService:
         return TokenResponse(
             access_token = JWTService.create_access_token(user.id),
             refresh_token = refresh_token
+        )
+    
+    @staticmethod
+    async def login_with_google(code: str) -> LoginResponse:
+        async with httpx.AsyncClient() as client:
+            token_resp = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data = {
+                    "client_id": settings.GOOGLE_CLIENT_ID,
+                    "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                    "code": code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": settings.GOOGLE_REDIRECT_URI 
+                }
+            )
+
+        token_data = token_resp.json()
+        print("Google token response:", token_data)
+        if "access_token" not in token_data:
+            raise AppException(
+                error = "",
+                message = "",
+                status_code = status.HTTP_401_UNAUTHORIZED 
+            )
+
+        access_token = token_data["access_token"]
+
+        async with httpx.AsyncClient() as client:
+            userinfo = await client.get(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                headers = {"Authorization": f"Bearer {access_token}"}
+            )
+        
+        google_user = userinfo.json()
+
+        user = await UserRepository.get_by_email(google_user["email"])
+
+        if not user:
+            user = User(
+                email= google_user["email"],
+                password = None,
+                provider = "google" 
+            )
+            user = await UserRepository.create(user)
+
+        return LoginResponse(
+            user = {
+                "id": str(user.id),
+                "email": user.email
+            },
+            tokens = TokenResponse(
+                access_token = JWTService.create_access_token(user.id),
+                refresh_token = JWTService.create_refresh_token(user.id)
+            )
         )
