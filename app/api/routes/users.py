@@ -2,6 +2,8 @@ from fastapi import APIRouter, status, Depends
 from app.schemas.user import UserCreate, UserReponse
 from app.services.user_service import UserService 
 from app.schemas.response import SucessResponse
+from app.core.auth_dependencies import get_current_user
+from app.models.user import User
 
 router = APIRouter(prefix = "/users", tags = ["users"])
 
@@ -18,5 +20,21 @@ async def create_user(user: UserCreate):
         data = UserReponse(
             id = str(created_user.id),
             email = created_user.email
+        )
+    )
+
+@router.get(
+    "/{id}",
+    status_code = status.HTTP_200_OK,
+    response_model = SucessResponse[UserReponse]
+)
+async def get_user_by_id(id: str, _: User = Depends(get_current_user)):
+    user = await UserService.list_user(id)
+
+    return SucessResponse(
+        message = "User found.",
+        data = UserReponse(
+            id = str(user.id),
+            email = user.email
         )
     )
