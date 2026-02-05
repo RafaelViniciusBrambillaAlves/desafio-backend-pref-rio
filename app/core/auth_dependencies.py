@@ -6,10 +6,11 @@ from app.repositories.user_repository import UserRepository
 from fastapi.security import HTTPAuthorizationCredentials
 from app.core.security_scheme import bearer_schemas
 from jose import JWTError
+from app.models.user import User
 
 async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(bearer_schemas)
-):
+) -> User:
     token = credentials.credentials
 
     try: 

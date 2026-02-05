@@ -1,5 +1,5 @@
-from fastapi import APIRouter, status, Depends
-from app.schemas.user import UserCreate, UserReponse
+from fastapi import APIRouter, status, Depends, UploadFile, File
+from app.schemas.user import UserCreate, UserReponse, DocumentUploadResponse
 from app.services.user_service import UserService 
 from app.schemas.response import SucessResponse
 from app.core.auth_dependencies import get_current_user
@@ -37,4 +37,37 @@ async def get_user_by_id(id: str, _: User = Depends(get_current_user)):
             id = str(user.id),
             email = user.email
         )
+    )
+
+@router.delete(
+    "/me",
+    status_code = status.HTTP_200_OK,
+    response_model = SucessResponse[UserReponse]
+)
+async def delete_user_by_id(current_user: User = Depends(get_current_user)):
+    deleted_user = await UserService.delete_user(current_user.id)
+
+    return SucessResponse(
+        message = "User deleted successfully",
+        data = UserReponse(
+            id = str(deleted_user.id),
+            email = deleted_user.email
+        )
+    )
+
+@router.post(
+    "/me/cnh-photo",
+    status_code = status.HTTP_201_CREATED,
+    response_model = SucessResponse[DocumentUploadResponse]
+)
+async def upload_documents(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+
+    path = await UserService.upload_documents(
+        user = current_user,
+        file = file
+    )
+
+    return SucessResponse(
+        message = "Document upload successfuly.",
+        data = DocumentUploadResponse(path = path)
     )

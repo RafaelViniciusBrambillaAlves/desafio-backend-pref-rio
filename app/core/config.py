@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str
     GOOGLE_REDIRECT_URI: str
 
+    MINIO_ENDPOINT: str
+    MINIO_ACCESS_KEY: str 
+    MINIO_SECRET_KEY: str
+    MINIO_BUCKET: str
+    MINIO_SECURE: bool = False
+
     model_config = SettingsConfigDict(
         env_file = ".env",
         extra = "forbid",
@@ -21,4 +27,3 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
-

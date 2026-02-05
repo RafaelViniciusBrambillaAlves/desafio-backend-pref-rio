@@ -113,3 +113,4 @@ class AuthService:
                 refresh_token = JWTService.create_refresh_token(user.id)
             )
         )
+    
