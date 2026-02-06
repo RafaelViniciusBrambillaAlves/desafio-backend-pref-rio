@@ -29,3 +29,21 @@ class DocumentRepository:
         )
     
         return object_name
+    
+    @staticmethod
+    def list_by_user(user_id: str) -> list[str]:
+        client = get_minio_client()
+        prefix = f"documents/{user_id}/"
+
+        try:
+            objects = client.list_objects(
+                bucket_name = settings.MINIO_BUCKET,
+                prefix = prefix,
+                recursive = True
+            )
+            return [obj.object_name for obj in objects]
+        
+        except S3Error as e:
+            raise
+
+        

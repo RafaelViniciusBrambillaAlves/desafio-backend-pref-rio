@@ -30,3 +30,14 @@ class DocumentService:
                 message = "Error uploading CNH photo",
                 status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             ) from e
+    
+    @classmethod
+    async def list_user_documents(cls, user_id: str) -> list[str]:
+        try:
+            return DocumentRepository.list_by_user(user_id)
+        except S3Error:
+            raise AppException(
+                error = "MINIO_LIST_ERROR",
+                message = "Error listing documents.",
+                status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

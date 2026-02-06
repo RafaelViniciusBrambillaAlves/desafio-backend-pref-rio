@@ -75,7 +75,7 @@ class AuthService:
             )
 
         token_data = token_resp.json()
-        print("Google token response:", token_data)
+        # print("Google token response:", token_data)
         if "access_token" not in token_data:
             raise AppException(
                 error = "",

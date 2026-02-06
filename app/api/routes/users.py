@@ -1,9 +1,10 @@
 from fastapi import APIRouter, status, Depends, UploadFile, File
-from app.schemas.user import UserCreate, UserReponse, DocumentUploadResponse
+from app.schemas.user import UserCreate, UserReponse
 from app.services.user_service import UserService 
 from app.schemas.response import SucessResponse
 from app.core.auth_dependencies import get_current_user
 from app.models.user import User
+from app.schemas.document import DocumentItem, DocumentListResponse, DocumentUploadResponse
 
 router = APIRouter(prefix = "/users", tags = ["users"])
 
@@ -70,4 +71,21 @@ async def upload_documents(file: UploadFile = File(...), current_user: User = De
     return SucessResponse(
         message = "Document upload successfuly.",
         data = DocumentUploadResponse(path = path)
+    )
+
+@router.get(
+    "/me/documents",
+    status_code = status.HTTP_200_OK,
+    response_model = SucessResponse[DocumentListResponse]
+)
+async def list_my_documents(current_user: User = Depends(get_current_user)):
+    documents = await UserService.list_documents(current_user)
+
+    return SucessResponse(
+        message = "Documents listed successfully.",
+        data = DocumentListResponse(
+            documents =[
+                DocumentItem(path = doc) for doc in documents
+            ]
+        )
     )

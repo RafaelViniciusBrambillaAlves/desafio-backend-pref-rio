@@ -59,3 +59,9 @@ class UserService:
             user_id = user.id, 
             file = file
         )
+    
+    @staticmethod
+    async def list_documents(user: User) -> list[str]:
+        return await DocumentService.list_user_documents(user.id)
+    
+     

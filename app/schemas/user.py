@@ -12,6 +12,3 @@ class UserReponse(UserBase):
 class UserPublic(BaseModel):
     id: str
     email: str
-
-class DocumentUploadResponse(BaseModel):
-    path: str
