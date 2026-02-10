@@ -5,6 +5,7 @@ from app.repositories.transport_pass_repository import TransportPassRepository
 from app.schemas.chatbot_response import ChatbotResponse, ChatbotResponseType
 from app.repositories.chatbot_context_repository import ChatbotContextRepository
 from app.domain.chatbot_state import ChatbotState
+from app.services.transport_pass_services import TransportPassService
 
 
 class ChatbotService:
@@ -92,7 +93,7 @@ class ChatbotService:
         if text in cls.YES:
             amount = context.temp_amount
 
-            update = await TransportPassRepository.update_balance(
+            update_balance = await TransportPassService.recharge(
                 context.user_id,
                 amount
             )
@@ -104,7 +105,7 @@ class ChatbotService:
                 type = ChatbotResponseType.INFO,
                 message = (
                     f"Recarga de R$ {amount:.2f} realizada com sucesso.\n"
-                    f"Saldo atual: R$ {update.balance:.2f}"
+                    f"Saldo atual: R$ {update_balance:.2f}"
                 )
             )
 

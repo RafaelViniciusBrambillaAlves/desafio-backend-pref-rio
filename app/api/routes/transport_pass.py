@@ -42,7 +42,7 @@ async def recharge(payload: RechargeRequest, current_user: User = Depends(get_cu
     response_model = SucessResponse[BalanceResponse]
 )
 async def use_transport(payload: DebitRequest, current_user: User = Depends(get_current_user)):
-    balance = await TransportPassService.use_balance(
+    balance = await TransportPassService.use(
         current_user.id,
         payload.amount
     )
