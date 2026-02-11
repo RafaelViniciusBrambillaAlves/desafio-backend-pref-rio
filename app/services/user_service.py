@@ -1,16 +1,19 @@
 from fastapi import status, UploadFile
 from app.models.user import User
-from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate
 from app.core.exceptions import AppException
 from app.core.security import Security
 from app.services.documents_services import DocumentService
+from app.repositories.interfaces.user_repository_interface import IUserRepository
 
 class UserService:
 
-    @staticmethod
-    async def _validate_email(email: str):
-        if await UserRepository.get_by_email(email):
+    def __init__(self, repository: IUserRepository):
+        self.repository = repository
+
+
+    async def _validate_email(self, email: str):
+        if await self.repository.get_by_email(email):
             raise AppException(
                 error = "EMAIL_ALREADY_EXISTS",
                 message = "A user with this email already exists.",
@@ -18,19 +21,22 @@ class UserService:
             )
     
 
-    @classmethod
-    async def register(cls, user: UserCreate) -> User:
-        await cls._validate_email(user.email)
+    async def register(self, user_data: UserCreate) -> User:
+        await cls._validate_email(user_data.email)
 
-        user.password = Security.hash_password(user.password)
-        user_model = User(**user.model_dump())
+        hashed_password = Security.hash_password(user_data.password)
 
-        return await UserRepository.create(user_model)
+        user = User(
+            email = user_data.email,
+            password = hashed_password
+        )
 
-    @classmethod
-    async def list_user(cls, id: str) -> User:
+        return await self.repository.create(user)
 
-        user = await UserRepository.get_by_id(id)
+
+    async def get_user(self, user_id: str) -> User:
+
+        user = await self.repository.get_by_id(user_id)
 
         if not user:
             raise AppException(
@@ -41,9 +47,9 @@ class UserService:
 
         return user
     
-    @classmethod
-    async def delete_user(cls, id: str) -> User:
-        user = await UserRepository.delete_by_id(id)
+   
+    async def delete_user(self, user_id: str) -> User:
+        user = await self.repository.delete_by_id(user_id)
 
         if not user:
             raise AppException(
@@ -53,14 +59,12 @@ class UserService:
             )
         return user
 
-    @staticmethod
     async def upload_documents(user: User, file: UploadFile) -> str:
         return await DocumentService.upload(
             user_id = user.id, 
             file = file
         )
     
-    @staticmethod
     async def list_documents(user: User) -> list[str]:
         return await DocumentService.list_user_documents(user.id)
     

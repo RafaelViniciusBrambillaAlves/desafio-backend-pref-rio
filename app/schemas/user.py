@@ -12,3 +12,4 @@ class UserReponse(UserBase):
 class UserPublic(BaseModel):
     id: str
     email: str
+    

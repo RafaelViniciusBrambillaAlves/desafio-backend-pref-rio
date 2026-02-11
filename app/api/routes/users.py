@@ -5,6 +5,7 @@ from app.schemas.response import SucessResponse
 from app.core.auth_dependencies import get_current_user
 from app.models.user import User
 from app.schemas.document import DocumentItem, DocumentListResponse, DocumentUploadResponse
+from app.dependencies.user_dependencies import get_user_service
 
 router = APIRouter(prefix = "/users", tags = ["users"])
 
@@ -13,8 +14,11 @@ router = APIRouter(prefix = "/users", tags = ["users"])
     status_code = status.HTTP_201_CREATED,
     response_model = SucessResponse[UserReponse]
 )
-async def create_user(user: UserCreate):
-    created_user  = await UserService.register(user)
+async def create_user(
+        user: UserCreate,
+        service: UserService = Depends(get_user_service)
+):
+    created_user  = await service.register(user)
 
     return SucessResponse(
         message = "User created successfully.",
@@ -29,8 +33,12 @@ async def create_user(user: UserCreate):
     status_code = status.HTTP_200_OK,
     response_model = SucessResponse[UserReponse]
 )
-async def get_user_by_id(id: str, _: User = Depends(get_current_user)):
-    user = await UserService.list_user(id)
+async def get_user_by_id(
+    id: str, 
+    service: UserService = Depends(get_user_service),
+    _: User = Depends(get_current_user)
+):
+    user = await service.list_user(id)
 
     return SucessResponse(
         message = "User found.",
@@ -45,8 +53,11 @@ async def get_user_by_id(id: str, _: User = Depends(get_current_user)):
     status_code = status.HTTP_200_OK,
     response_model = SucessResponse[UserReponse]
 )
-async def delete_user_by_id(current_user: User = Depends(get_current_user)):
-    deleted_user = await UserService.delete_user(current_user.id)
+async def delete_user_by_id(
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+):
+    deleted_user = await service.delete_user(current_user.id)
 
     return SucessResponse(
         message = "User deleted successfully",
@@ -55,7 +66,7 @@ async def delete_user_by_id(current_user: User = Depends(get_current_user)):
             email = deleted_user.email
         )
     )
-
+    
 @router.post(
     "/me/cnh-photo",
     status_code = status.HTTP_201_CREATED,
