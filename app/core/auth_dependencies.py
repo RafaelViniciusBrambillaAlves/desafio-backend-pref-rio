@@ -2,15 +2,18 @@ from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from app.core.jwt import JWTService
 from app.core.exceptions import AppException
-from app.repositories.user_repository import UserRepository
 from fastapi.security import HTTPAuthorizationCredentials
 from app.core.security_scheme import bearer_schemas
 from jose import JWTError
 from app.models.user import User
+from app.services.user_service import UserService
+from app.dependencies.user_dependencies import get_user_service
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(bearer_schemas)
+        credentials: HTTPAuthorizationCredentials = Depends(bearer_schemas),
+        auth_services: UserService = Depends(get_user_service)
 ) -> User:
+    
     token = credentials.credentials
 
     try: 
@@ -30,7 +33,7 @@ async def get_current_user(
             status_code = status.HTTP_401_UNAUTHORIZED
         )
 
-    user = await UserRepository.get_by_id(payload.get("sub"))
+    user = await auth_services.get_user(payload.get("sub"))
 
     if not user:
         raise AppException(

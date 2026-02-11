@@ -38,7 +38,7 @@ async def get_user_by_id(
     service: UserService = Depends(get_user_service),
     _: User = Depends(get_current_user)
 ):
-    user = await service.list_user(id)
+    user = await service.get_user(id)
 
     return SucessResponse(
         message = "User found.",

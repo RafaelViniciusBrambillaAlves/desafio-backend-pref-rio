@@ -1,6 +1,5 @@
 from fastapi import status
 from app.schemas.auth import LoginResponse, TokenResponse
-from app.repositories.user_repository import UserRepository
 from app.core.security import Security
 from app.core.exceptions import AppException
 from app.schemas.user import UserPublic 
@@ -8,12 +7,16 @@ from app.core.jwt import JWTService
 import httpx
 from app.core.config import settings
 from app.models.user import User
+from app.repositories.interfaces.user_repository_interface import IUserRepository 
 
 class AuthService:
 
-    @staticmethod
-    async def login(email: str, password: str) -> LoginResponse:
-        user = await UserRepository.get_by_email(email)
+    def __init__(self, repository: IUserRepository):
+       self.repository = repository
+
+
+    async def login(self, email: str, password: str) -> LoginResponse:
+        user = await self.repository.get_by_email(email)
 
         if not user or not Security.verify_password(password, user.password):
             raise AppException(
@@ -35,8 +38,7 @@ class AuthService:
             tokens = tokens
         )
 
-    @staticmethod
-    async def refresh_token(refresh_token: str) -> TokenResponse:
+    async def refresh_token(self, refresh_token: str) -> TokenResponse:
         payload = JWTService.decode_token(refresh_token)
        
         if payload.get("type") != "refresh":
@@ -46,7 +48,7 @@ class AuthService:
                 status_code = status.HTTP_401_UNAUTHORIZED
             )
         
-        user = await UserRepository.get_by_id(payload.get("sub"))
+        user = await self.repository.get_by_id(payload.get("sub"))
 
         if not user:
             raise AppException(
@@ -60,8 +62,7 @@ class AuthService:
             refresh_token = refresh_token
         )
     
-    @staticmethod
-    async def login_with_google(code: str) -> LoginResponse:
+    async def login_with_google(self, code: str) -> LoginResponse:
         async with httpx.AsyncClient() as client:
             token_resp = await client.post(
                 "https://oauth2.googleapis.com/token",
@@ -75,7 +76,6 @@ class AuthService:
             )
 
         token_data = token_resp.json()
-        # print("Google token response:", token_data)
         if "access_token" not in token_data:
             raise AppException(
                 error = "",
@@ -93,7 +93,7 @@ class AuthService:
         
         google_user = userinfo.json()
 
-        user = await UserRepository.get_by_email(google_user["email"])
+        user = await self.repository.get_by_email(google_user["email"])
 
         if not user:
             user = User(
@@ -101,7 +101,7 @@ class AuthService:
                 password = None,
                 provider = "google" 
             )
-            user = await UserRepository.create(user)
+            user = await self.repository.create(user)
 
         return LoginResponse(
             user = {

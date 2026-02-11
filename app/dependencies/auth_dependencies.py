@@ -1,7 +1,7 @@
+from app.services.auth_service import AuthService
 from app.repositories.user_repository import MongoUserRepository
-from app.services.user_service import UserService
 from app.repositories.interfaces.user_repository_interface import IUserRepository
 
-def get_user_service() -> UserService:
+def get_auth_service() -> AuthService:
     repository: IUserRepository = MongoUserRepository()
-    return UserService(repository)
+    return AuthService(repository)

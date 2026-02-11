@@ -22,7 +22,7 @@ class UserService:
     
 
     async def register(self, user_data: UserCreate) -> User:
-        await cls._validate_email(user_data.email)
+        await self._validate_email(user_data.email)
 
         hashed_password = Security.hash_password(user_data.password)
 
