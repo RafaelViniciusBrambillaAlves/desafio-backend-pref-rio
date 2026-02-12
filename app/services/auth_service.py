@@ -104,10 +104,10 @@ class AuthService:
             user = await self.repository.create(user)
 
         return LoginResponse(
-            user = {
-                "id": str(user.id),
-                "email": user.email
-            },
+            user = UserPublic(
+                id = str(user.id),
+                email = user.email
+            ),
             tokens = TokenResponse(
                 access_token = JWTService.create_access_token(user.id),
                 refresh_token = JWTService.create_refresh_token(user.id)

@@ -1,28 +1,32 @@
 from fastapi import status
 from bson import ObjectId
-from app.repositories.transport_pass_repository import TransportPassRepository
 from app.core.exceptions import AppException
-from app.repositories.transaction_repositoy import TransactionRepository
 from app.domain.transaction_type import TransactionType
 from app.models.transaction import Transaction
+from app.repositories.interfaces.transportpass_pass_repository_interface import ITransportPassRepository
+from app.repositories.interfaces.transaction_repository_interface import ITransactionRepository
 
 
 class TransportPassService:
 
-    @classmethod
-    async def get_or_create(cls, user_id: ObjectId):
-        transport_pass = await TransportPassRepository.get_by_user_id(user_id)
+    def __init__(self, transport_repository: ITransportPassRepository, transaction_repository: ITransactionRepository):
+        self.transport_repository = transport_repository
+        self.transaction_repository = transaction_repository
+
+
+    async def get_or_create(self, user_id: ObjectId):
+        transport_pass = await self.transport_repository.get_by_user_id(user_id)
         if not transport_pass:
-            transport_pass = await TransportPassRepository.create(user_id)
+            transport_pass = await self.transport_repository.create(user_id)
         return transport_pass
-    
-    @classmethod
-    async def get_balance(cls, user_id: ObjectId) -> float: 
-        transport_pass = await cls.get_or_create(user_id)
+
+
+    async def get_balance(self, user_id: ObjectId) -> float: 
+        transport_pass = await self.get_or_create(user_id)
         return transport_pass.balance
 
-    @classmethod
-    async def recharge(cls, user_id: ObjectId, amount: float) -> float:
+    
+    async def recharge(self, user_id: ObjectId, amount: float) -> float:
         if amount <= 0:
             raise AppException(
                 error = "INVALID_AMOUNT",
@@ -30,11 +34,11 @@ class TransportPassService:
                 status_code = status.HTTP_400_BAD_REQUEST
             )
         
-        transport_pass = await TransportPassRepository.get_by_user_id(user_id)
+        transport_pass = await self.transport_repository.get_by_user_id(user_id)
 
         balance_before = transport_pass.balance
 
-        updated_pass = await TransportPassRepository.update_balance(
+        updated_pass = await self.transport_repository.update_balance(
             user_id = user_id, 
             amount = amount
         )
@@ -47,12 +51,12 @@ class TransportPassService:
             balance_after = updated_pass.balance
         )
 
-        await TransactionRepository.create(transaction)
+        await self.transaction_repository.create(transaction)
 
         return updated_pass.balance
 
-    @classmethod
-    async def use(cls, user_id: ObjectId, amount: float) -> float:
+
+    async def use(self, user_id: ObjectId, amount: float) -> float:
         if amount <= 0:
             raise AppException(
                 error = "INVALID_AMOUNT",
@@ -60,7 +64,7 @@ class TransportPassService:
                 status_code = status.HTTP_400_BAD_REQUEST
             )
         
-        transport_pass = await TransportPassRepository.get_by_user_id(user_id)
+        transport_pass = await self.transport_repository.get_by_user_id(user_id)
 
         if transport_pass.balance < amount:
             raise AppException(
@@ -70,7 +74,7 @@ class TransportPassService:
             )
         balance_before = transport_pass.balance
 
-        update_pass = await TransportPassRepository.debit_balance(
+        update_pass = await self.transport_repository.debit_balance(
             user_id = user_id,
             amount = amount
         )
@@ -82,6 +86,6 @@ class TransportPassService:
             balance_before = balance_before,
             balance_after = update_pass.balance
         )
-        await TransactionRepository.create(transaction)
+        await self.transaction_repository.create(transaction)
 
         return update_pass.balance

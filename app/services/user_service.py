@@ -3,7 +3,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 from app.core.exceptions import AppException
 from app.core.security import Security
-from app.services.documents_services import DocumentService
+from app.services.document_services import DocumentService
 from app.repositories.interfaces.user_repository_interface import IUserRepository
 
 class UserService:
@@ -58,14 +58,3 @@ class UserService:
                 status_code = status.HTTP_404_NOT_FOUND
             )
         return user
-
-    async def upload_documents(user: User, file: UploadFile) -> str:
-        return await DocumentService.upload(
-            user_id = user.id, 
-            file = file
-        )
-    
-    async def list_documents(user: User) -> list[str]:
-        return await DocumentService.list_user_documents(user.id)
-    
-     

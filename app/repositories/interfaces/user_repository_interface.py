@@ -1,20 +1,20 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from app.models.user import User 
 
 class IUserRepository(ABC):
 
-    @abstractclassmethod
+    @abstractmethod
     async def create(self, user: User) -> User:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     async def get_by_email(self, email: str) -> User | None:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     async def get_by_id(self, id: str) -> User | None:
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     async def delete_by_id(self, id: str) -> User | None:
         pass
