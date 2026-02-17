@@ -1,8 +1,16 @@
-from app.services.auth_service import AuthService
-from app.repositories.user_repository import MongoUserRepository
-from app.repositories.interfaces.user_repository_interface import IUserRepository
-from app.dependencies.user_dependencies import get_user_repository
 from fastapi import Depends
+from app.dependencies.user_dependencies import get_user_repository
+from app.application.use_cases.auth.login_user_use_case import LoginUserUseCase
+from app.application.use_cases.auth.refresh_token_use_case import RefreshTokenUseCase
+from app.application.use_cases.auth.login_with_google_use_case import LoginWithGoogleUseCase
 
-def get_auth_service(repository: IUserRepository = Depends(get_user_repository)) -> AuthService:
-    return AuthService(repository)
+
+
+def get_login_use_case(repository = Depends(get_user_repository)):
+    return LoginUserUseCase(repository)
+
+def get_refresh_token_use_case(repository = Depends(get_user_repository)):
+    return RefreshTokenUseCase(repository)
+
+def get_google_login_use_case(repository = Depends(get_user_repository)):
+    return LoginWithGoogleUseCase(repository)

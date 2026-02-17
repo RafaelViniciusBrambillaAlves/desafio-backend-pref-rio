@@ -4,47 +4,49 @@ from fastapi import UploadFile
 from minio.error import S3Error
 from app.repositories.interfaces.documents_repository_interface import IDocumentRepository
 from minio import Minio
+from fastapi.concurrency import run_in_threadpool
 
 class DocumentRepository(IDocumentRepository):
 
     def __init__(self, client: Minio):
-        self.client = client
+        self._client = client
+        self._bucket = settings.MINIO_BUCKET
 
-    def ensure_bucket_exists(self) -> None:
-         
-        if not self.client.bucket_exists(settings.MINIO_BUCKET):
-            self.client.make_bucket(settings.MINIO_BUCKET) 
+    async def _ensure_bucket_exists(self):
+        exists = await run_in_threadpool(
+            self._client.bucket_exists,
+            self._bucket  
+        )
 
-    def insert_image(self, object_name: str, file: UploadFile) -> str:
-        try:
-            self.ensure_bucket_exists()
-
-            self.client.put_object(
-                bucket_name = settings.MINIO_BUCKET,
-                object_name = object_name,
-                data = file.file,
-                length = -1,
-                part_size = 10 * 1024 * 1024,
-                content_type = file.content_type
+        if not exists:
+            await run_in_threadpool(
+                self._client.make_bucket,
+                self._bucket
             )
-    
-            return object_name
-    
-        except S3Error:
-            raise
 
-    def list_by_user(self, user_id: str) -> list[str]:
-        try:
-            prefix = f"documents/{user_id}/"
 
-            objects = self.client.list_objects(
-                bucket_name = settings.MINIO_BUCKET,
-                prefix = prefix,
-                recursive = True
-            )
-            return [obj.object_name for obj in objects]
+    async def upload(self, object_name: str, file: UploadFile) -> str:
+        await self._ensure_bucket_exists()
+
+        await run_in_threadpool(
+           self._client.put_object,
+           self._bucket,
+           object_name,
+           file.file,
+           -1, 
+           part_size = 10 * 1024 * 1024,
+           content_type = file.content_type
+        )
         
-        except S3Error as e:
-            raise
+        return object_name
 
-        
+
+    async def list_by_prefix(self, prefix: str) -> list[str]:
+        objects = await run_in_threadpool(
+            self._client.list_objects,
+            self._bucket,
+            prefix,
+            True
+        )
+
+        return [obj.object_name for obj in objects]

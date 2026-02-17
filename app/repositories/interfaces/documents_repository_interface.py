@@ -4,13 +4,9 @@ from fastapi import UploadFile
 class IDocumentRepository(ABC):
 
     @abstractmethod
-    def ensure_bucket_exists(self, client):
+    async def upload(self, object_name: str, file: UploadFile) -> str:
         pass
 
     @abstractmethod
-    def insert_image(self, object_name: str, file: UploadFile) -> str:
-        pass
-
-    @abstractmethod
-    def list_by_user(self, user_id: str) -> list[str]:
+    async def list_by_prefix(self, prefix: str) -> list[str]:
         pass

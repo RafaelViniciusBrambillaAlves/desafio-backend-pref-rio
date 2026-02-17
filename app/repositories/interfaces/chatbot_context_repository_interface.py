@@ -5,7 +5,7 @@ from app.models.chatbot_context import ChatbotContext
 class IChatbotContextRepository(ABC):
 
     @abstractmethod
-    async def get(user_id: ObjectId) -> ChatbotContext:
+    async def get(self, user_id: ObjectId) -> ChatbotContext:
         pass
 
     @abstractmethod

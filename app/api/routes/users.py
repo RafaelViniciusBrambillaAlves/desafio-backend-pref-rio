@@ -1,14 +1,20 @@
 from fastapi import APIRouter, status, Depends, UploadFile, File
 from app.schemas.user import UserCreate, UserReponse
-from app.services.user_service import UserService 
 from app.schemas.response import SucessResponse
 from app.core.auth_dependencies import get_current_user
 from app.models.user import User
 from app.schemas.document import DocumentItem, DocumentListResponse, DocumentUploadResponse
-from app.dependencies.user_dependencies import get_user_service
-from app.dependencies.database_dependencies import get_database
-from app.services.document_services import DocumentService
-from app.dependencies.document_dependencies import get_document_service
+from app.dependencies.user_dependencies import get_create_user_use_case
+from app.application.use_cases.user.create_user_use_case import CreateUserUseCase
+from app.dependencies.user_dependencies import get_get_user_use_case
+from app.application.use_cases.user.get_user_use_case import GetUserUseCase
+from app.dependencies.user_dependencies import get_delete_user_use_case
+from app.application.use_cases.user.delete_user_use_case import DeleteUserUseCase
+from app.application.use_cases.document.list_user_documents_use_case import ListUserDocumentsUseCase
+from app.dependencies.document_dependencies import get_list_user_documents_use_case
+from app.application.use_cases.document.upload_document_use_case import UploadDocumentUseCase
+from app.dependencies.document_dependencies import get_upload_document_use_case
+
 
 router = APIRouter(prefix = "/users", tags = ["users"])
 
@@ -19,10 +25,9 @@ router = APIRouter(prefix = "/users", tags = ["users"])
 )
 async def create_user(
         user: UserCreate,
-        service: UserService = Depends(get_user_service),
-        db = Depends(get_database)
+        use_case: CreateUserUseCase = Depends(get_create_user_use_case)
 ):
-    created_user  = await service.register(user)
+    created_user  = await use_case.execute(user)
 
     return SucessResponse(
         message = "User created successfully.",
@@ -39,10 +44,10 @@ async def create_user(
 )
 async def get_user_by_id(
     id: str, 
-    service: UserService = Depends(get_user_service),
+    use_case: GetUserUseCase = Depends(get_get_user_use_case),
     _: User = Depends(get_current_user)
 ):
-    user = await service.get_user(id)
+    user = await use_case.execute(id)
 
     return SucessResponse(
         message = "User found.",
@@ -59,9 +64,9 @@ async def get_user_by_id(
 )
 async def delete_user_by_id(
     current_user: User = Depends(get_current_user),
-    service: UserService = Depends(get_user_service)
+    use_case: DeleteUserUseCase = Depends(get_delete_user_use_case)
 ):
-    deleted_user = await service.delete_user(current_user.id)
+    deleted_user = await use_case.execute(current_user.id)
 
     return SucessResponse(
         message = "User deleted successfully",
@@ -79,11 +84,12 @@ async def delete_user_by_id(
 async def upload_documents(
     file: UploadFile = File(...), 
     current_user: User = Depends(get_current_user),
-    document_service: DocumentService = Depends(get_document_service)
+    use_case: UploadDocumentUseCase = Depends(get_upload_document_use_case)
+    
 ):
 
-    path = await document_service.upload(
-        user = str(current_user.id),
+    path = await use_case.execute(
+        user_id = str(current_user.id),
         file = file
     )
 
@@ -99,9 +105,9 @@ async def upload_documents(
 )
 async def list_my_documents(
     current_user: User = Depends(get_current_user),
-    document_service: DocumentService = Depends(get_document_service)
+    use_case: ListUserDocumentsUseCase = Depends(get_list_user_documents_use_case)
 ):
-    documents = await document_service.list_user_documents(
+    documents = await use_case.execute(
         user_id = str(current_user.id)
     )
 

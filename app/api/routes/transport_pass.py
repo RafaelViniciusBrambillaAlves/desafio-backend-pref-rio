@@ -3,8 +3,18 @@ from app.core.auth_dependencies import get_current_user
 from app.models.user import User
 from app.schemas.response import SucessResponse
 from app.schemas.transport_pass import BalanceResponse, RechargeRequest, DebitRequest
-from app.services.transport_pass_services import TransportPassService
-from app.dependencies.transport_pass_dependecies import get_transport_pass_service
+# from app.services.transport_pass_services import TransportPassService
+# from app.dependencies.transport_pass_dependecies import get_transport_pass_service
+
+from app.dependencies.user_dependencies import get_create_user_use_case
+from app.application.use_cases.user.create_user_use_case import CreateUserUseCase
+
+from app.dependencies.transport_pass_dependecies import get_balance_use_case
+from app.application.use_cases.transport_pass.get_balance_use_case import GetBalanceUseCase
+from app.dependencies.transport_pass_dependecies import get_recharge_use_case
+from app.application.use_cases.transport_pass.recharge_transport_pass_use_case import RechargeTransportPassUseCase
+from app.dependencies.transport_pass_dependecies import get_use_transport_use_case
+from app.application.use_cases.transport_pass.use_transport_pass_use_case import UseTransportPassUseCase 
 
 
 router = APIRouter(prefix = "/transport-pass", tags = ["Transport Pass"])
@@ -16,9 +26,9 @@ router = APIRouter(prefix = "/transport-pass", tags = ["Transport Pass"])
 )
 async def get_balance(
     current_user: User = Depends(get_current_user),
-    service: TransportPassService = Depends(get_transport_pass_service)
+    service: GetBalanceUseCase = Depends(get_balance_use_case)
 ):
-    balance = await service.get_balance(current_user.id)
+    balance = await service.execute(current_user.id)
 
     return SucessResponse(
         message = "Balance retrieved successfully.",
@@ -33,9 +43,9 @@ async def get_balance(
 async def recharge(
     payload: RechargeRequest, 
     current_user: User = Depends(get_current_user),
-    service: TransportPassService = Depends(get_transport_pass_service)
+    service: RechargeTransportPassUseCase = Depends(get_recharge_use_case)
 ):
-    balance = await service.recharge(
+    balance = await service.execute(
         current_user.id,
         payload.amount
     )
@@ -52,9 +62,9 @@ async def recharge(
 async def use_transport(
     payload: DebitRequest, 
     current_user: User = Depends(get_current_user),
-    service: TransportPassService = Depends(get_transport_pass_service)
+    service: UseTransportPassUseCase = Depends(get_use_transport_use_case)
 ):
-    balance = await service.use(
+    balance = await service.execute(
         current_user.id,
         payload.amount
     )

@@ -3,8 +3,9 @@ from app.core.auth_dependencies import get_current_user
 from app.models.user import User
 from app.schemas.response import SucessResponse
 from app.schemas.transaction import TransactionResponse
-from app.services.transactions_service import TransactionService
-from app.dependencies.transactions_dependencies import get_transaction
+from app.application.use_cases.transaction.list_transactions_use_case import ListTransactionsUseCase
+from app.dependencies.transactions_dependencies import get_list_transaction_use_case
+
 
 router = APIRouter( prefix = "/transactions", tags = ["Transactions"])
 
@@ -15,9 +16,9 @@ router = APIRouter( prefix = "/transactions", tags = ["Transactions"])
 )
 async def get_transactions(
     current_user: User = Depends(get_current_user),
-    service: TransactionService = Depends(get_transaction)
+    use_caes: ListTransactionsUseCase = Depends(get_list_transaction_use_case)
 ):
-    transactions = await service.list_transactions(current_user.id)
+    transactions = await use_caes.execute(current_user.id)
 
     return SucessResponse(
         message = "Transactions retrieved successfully",

@@ -6,12 +6,12 @@ from fastapi.security import HTTPAuthorizationCredentials
 from app.core.security_scheme import bearer_schemas
 from jose import JWTError
 from app.models.user import User
-from app.services.user_service import UserService
-from app.dependencies.user_dependencies import get_user_service
+from app.application.use_cases.user.get_user_use_case import GetUserUseCase
+from app.dependencies.user_dependencies import get_get_user_use_case
 
 async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(bearer_schemas),
-        auth_services: UserService = Depends(get_user_service)
+        use_case: GetUserUseCase = Depends(get_get_user_use_case)
 ) -> User:
     
     token = credentials.credentials
@@ -33,7 +33,7 @@ async def get_current_user(
             status_code = status.HTTP_401_UNAUTHORIZED
         )
 
-    user = await auth_services.get_user(payload.get("sub"))
+    user = await use_case.execute(payload.get("sub"))
 
     if not user:
         raise AppException(

@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, status
 from app.schemas.response import SucessResponse
 from app.schemas.auth import LoginResponse, LoginRequest, RefreshTokenRequest
-from app.services.auth_service import AuthService
-from fastapi.security import OAuth2PasswordRequestForm
+# from app.services.auth_service import AuthService
 from fastapi.responses import RedirectResponse 
 from app.core.oauth.google import google_oauth
-from app.dependencies.auth_dependencies import get_auth_service
+from app.application.use_cases.auth.login_user_use_case import LoginUserUseCase
+from app.dependencies.auth_dependencies import get_login_use_case
+from app.application.use_cases.auth.refresh_token_use_case import RefreshTokenUseCase
+from app.dependencies.auth_dependencies import get_refresh_token_use_case
+from app.application.use_cases.auth.login_with_google_use_case import LoginWithGoogleUseCase
+from app.dependencies.auth_dependencies import get_google_login_use_case
 
 router = APIRouter(prefix = "/auth", tags = ["auth"])
 
@@ -16,9 +20,9 @@ router = APIRouter(prefix = "/auth", tags = ["auth"])
 )
 async def login_json(
     data: LoginRequest,
-    service: AuthService = Depends(get_auth_service)
+    use_case: LoginUserUseCase = Depends(get_login_use_case)
 ):
-    result = await service.login(data.email, data.password)
+    result = await use_case.execute(data.email, data.password)
 
     return SucessResponse(
         message = "Login successful.",
@@ -32,9 +36,9 @@ async def login_json(
 )
 async def refresh_token(
     data: RefreshTokenRequest,
-    service: AuthService = Depends(get_auth_service)
+    use_case: RefreshTokenUseCase = Depends(get_refresh_token_use_case)
 ):
-    tokens = await service.refresh_token(data.refresh_token)
+    tokens = await use_case.execute(data.refresh_token)
 
     return SucessResponse(
         message = "Token refreshed successfully", 
@@ -46,7 +50,7 @@ async def refresh_token(
     status_code = status.HTTP_200_OK,
     summary = "Login with Google",
     description = """
-        Link: http://localhost:8000/auth/google/login
+        http://localhost:8000/auth/google/login
     """
 )
 def google_login():
@@ -60,9 +64,9 @@ def google_login():
 )
 async def google_callback(
     code: str,
-    service: AuthService = Depends(get_auth_service)
+    use_case: LoginWithGoogleUseCase = Depends(get_google_login_use_case)
 ):
-    result = await service.login_with_google(code)
+    result = await use_case.execute(code)
 
     return SucessResponse(
         message = "Login with Google successfully",
