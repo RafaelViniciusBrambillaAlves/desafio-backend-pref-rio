@@ -1,5 +1,4 @@
-# 🚍 Sistema de Gestão de Passe de Transporte com Chatbot Integrado
-
+# 🚍 Sistema de Gestão de Passe de Transporte
 API backend completa para gestão de passe de transporte digital,
 desenvolvida com foco em **arquitetura limpa, princípios SOLID e boas
 práticas de mercado**, garantindo escalabilidade, desacoplamento e alta
@@ -9,7 +8,7 @@ testabilidade.
 
 ## 📌 Visão Geral
 
-Este projeto implementa um sistema completo de passe de transporte
+Este projeto de estudo implementa parte de um sistema de passe de transporte
 digital, incluindo:
 
 -   ✅ Controle de saldo
@@ -28,32 +27,54 @@ escalar e evoluir com facilidade.
 
 # 🧱 Arquitetura
 
-O projeto segue uma arquitetura em camadas inspirada em **Clean
-Architecture**:
+O projeto atualmente segue uma arquitetura em camadas fortemente
+inspirada em **Clean Architecture**, promovendo baixo acoplamento, alta coesão e facilidade
+de manutenção.
 
-    controllers (routers)
+## 🔄 Fluxo de Dependência
+
+    API (Routers / Controllers)
     ↓
-    services (regras de negócio)
+    Application Layer (Use Cases)
     ↓
-    interfaces (contratos)
+    Domain (Models, Enums, Regras de Negócio)
     ↓
-    repositories (acesso a dados)
+    Interfaces (Contracts / Ports)
     ↓
-    database (MongoDB)
+    Infrastructure (Repositories - MongoDB / MinIO)
+    ↓
+    External Systems (MongoDB / MinIO)
 
-### 🎯 Separação de Responsabilidades
 
-  Camada       Responsabilidade
-  ------------ ------------------------
-  Router       Interface HTTP
-  Service      Regras de negócio
-  Interface    Contratos (abstrações)
-  Repository   Acesso ao banco
-  Database     Persistência
 
-Cada camada possui responsabilidade única, respeitando o **Single
-Responsibility Principle (SRP)**.
+------------------------------------------------------------------------
 
+## 🎯 Separação de Responsabilidades
+
+ 
+  Camada              |  Responsabilidade |
+  | :-----------------| :---------------  |
+  | **Router (Controller)** | Exposição da API HTTP, validação de entrada e resposta |
+  |**Use Case  (Application Layer)** | Orquestração das regras de negócio |
+  |**Domain** | Entidades, modelos, enums e regras centrais do sistema |
+  |**Interface (Contracts)** | Abstrações que definem contratos entre camadas |
+  | **Repository (Infrastructure)** | Implementação concreta de acesso a dados |
+  |**External Systems**| Sistemas externos como MongoDB e MinIO |
+  
+
+## 🏗 Princípios Aplicados
+
+-   **Single Responsibility Principle (SRP)** --- Cada camada possui
+    responsabilidade única.
+-   **Dependency Inversion Principle (DIP)** --- As regras de negócio
+    não dependem de implementações concretas.
+-   **Separation of Concerns** --- Separação clara entre regras de
+    negócio e infraestrutura.
+-   **Testabilidade** --- Use cases podem ser testados isoladamente com
+    mocks das interfaces.
+
+
+  
 ------------------------------------------------------------------------
 
 # ⚙️ Tecnologias Utilizadas
@@ -144,19 +165,7 @@ Usuário: 20\
 Usuário: sim\
 *Bot:* Recarga realizada com sucesso
 
-------------------------------------------------------------------------
-
-## 🏗 Princípios Aplicados
-
--   SOLID
--   Repository Pattern
--   Service Layer Pattern
--   Dependency Injection
--   DTO Pattern
--   State Management
--   Clean Architecture (inspirado)
-
-------------------------------------------------------------------------
+----------------------------------------------------------------------
 
 ## 🛡 Tratamento de Erros
 
@@ -206,21 +215,22 @@ docker-compose up --build
 
 4️⃣ Acessos
 ```
-http://localhost:8000
+http://localhost:8000 
 ```
 ```
-http://localhost:8000/docs
+http://localhost:8000/docs 
 ```
 ```
 http://localhost:8000/redoc
 ```
-```
+``` 
 http://localhost:9001
 ```
 
 5️⃣ Parar containers
+```
 docker-compose down
-
+```
 ------------------------------------------------------------------------
 
 ## 🎯 Competências Demonstradas
