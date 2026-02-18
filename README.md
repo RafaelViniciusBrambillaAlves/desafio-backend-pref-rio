@@ -51,6 +51,15 @@ de manutenção.
 
 ## 🎯 Separação de Responsabilidades
 
+  ```mermaid
+  graph TD
+  A[Router] --> B[UseCase]
+  B --> C[Domain]
+  B --> D[Interface]
+  D --> E[Repository]
+  E --> F[(MongoDB)]
+  ```
+
  
   Camada              |  Responsabilidade |
   | :-----------------| :---------------  |
@@ -72,7 +81,6 @@ de manutenção.
     negócio e infraestrutura.
 -   **Testabilidade** --- Use cases podem ser testados isoladamente com
     mocks das interfaces.
-
 
   
 ------------------------------------------------------------------------
@@ -144,7 +152,7 @@ com tipo, valor, saldo antes/depois e timestamp.
 
 -   Listagem paginada
 -   Ordenação por data decrescente
--   Separação entre Repository (consulta) e Service (DTO)
+-   Separação entre Repository (consulta) e UseCase
 
 ------------------------------------------------------------------------
 
@@ -253,3 +261,5 @@ Este projeto está sob a licença MIT. Sinta-se livre para usar, estudar e adapt
 ------------------------------------------------------------------------
 
 👨‍💻 Desenvolvido para fins de estudo e evolução técnica.
+
+
