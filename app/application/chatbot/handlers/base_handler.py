@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from bson import ObjectId
 from app.models.chatbot_context import ChatbotContext
 from app.schemas.chatbot_response import ChatbotResponse
+from app.repositories.interfaces.unit_of_work_interface import IUnitOfWork
 
 class BaseChatbotHandler(ABC):
 
@@ -10,7 +11,8 @@ class BaseChatbotHandler(ABC):
         self, 
         message: str,
         user_id: ObjectId,
-        context: ChatbotContext
+        context: ChatbotContext,
+        uow: IUnitOfWork
     ) -> ChatbotResponse:
         pass
 

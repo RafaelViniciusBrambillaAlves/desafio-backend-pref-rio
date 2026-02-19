@@ -5,37 +5,48 @@ from app.repositories.interfaces.chatbot_context_repository_interface import ICh
 from app.application.chatbot.handlers.base_handler import BaseChatbotHandler
 from bson import ObjectId
 from app.domain.chatbot_state import ChatbotState
+from app.repositories.interfaces.unit_of_work_interface import IUnitOfWork
 
 class HandleChatbotMessageUseCase:
 
     def __init__(
             self,
-            context_repository: IChatbotContextRepository,
+            uow : IUnitOfWork,
             handlers: dict[ChatbotIntent, BaseChatbotHandler]         
     ):
-        self._context_repository = context_repository
+        self._uow = uow
         self._handlers = handlers
 
     async def execute(self, message: str, user_id: ObjectId):
-        
-        context = await self._context_repository.get(user_id)
 
-        if context.state != ChatbotState.IDLE:
-            recharge_handler = self._handlers.get(ChatbotIntent.RECHARGE)
+        async with self._uow:      
 
-            if recharge_handler:
-                return await recharge_handler.handle(message, user_id, context)
+            context = await self._uow.chatbot_context.get(user_id)
 
-        intent = ChatbotIntentResolver.resolve(message)
+            if context.state != ChatbotState.IDLE:
+                handler = self._handlers.get(ChatbotIntent.RECHARGE)
+            else:
+                intent = ChatbotIntentResolver.resolve(message)
+                handler = self._handlers.get(intent)
 
-        handler = self._handlers.get(intent)
+            if not handler:
+                return ChatbotResponse(
+                    intent = ChatbotIntent.UNKNOWN,
+                    type = ChatbotResponseType.ERROR,
+                    message = "Não entendi. Pergunte sobre saldo ou recarga."
+                )
 
-        if not handler:
-            return ChatbotResponse(
-                intent = ChatbotIntent.UNKNOWN,
-                type = ChatbotResponseType.ERROR,
-                message = "Não entendi. Você pode perguntar sobre saldo ou recarga."
-            )    
-        
-        return await handler.handle(message, user_id, context)
-        
+            response = await handler.handle(message, user_id, context, self._uow)
+
+            if response.reset_context:
+                await self._uow.chatbot_context.reset(user_id)
+            
+            elif response.next_state:
+                context.state = response.next_state
+
+                if response.temp_amount is not None:
+                    context.temp_amount = response.temp_amount
+                    
+                await self._uow.chatbot_context.update(context)
+            
+            return response

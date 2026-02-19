@@ -89,7 +89,7 @@ async def upload_documents(
 ):
 
     path = await use_case.execute(
-        user_id = str(current_user.id),
+        user_id = current_user.id,
         file = file
     )
 
@@ -108,12 +108,15 @@ async def list_my_documents(
     use_case: ListUserDocumentsUseCase = Depends(get_list_user_documents_use_case)
 ):
     documents = await use_case.execute(
-        user_id = str(current_user.id)
+        user_id = current_user.id
     )
 
     return SucessResponse(
         message = "Documents listed successfully.",
         data = DocumentListResponse(
-            documents =[DocumentItem(path = doc) for doc in documents]
+            documents =[
+                DocumentItem(path = doc.object_name) 
+                for doc in documents
+            ]
         )
     )

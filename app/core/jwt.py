@@ -1,26 +1,36 @@
 from jose import jwt
 from app.core.config import settings
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import uuid
+import datetime
 
 class JWTService:  
-    ISSUER = "Prefeitura do Rio de Janeiro"
+    ISSUER = "transport-api"
 
     @staticmethod
     def create_access_token(user_id: int) -> str:
-        now = datetime.utcnow()
+        # now = datetime.now(timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         payload = {
             "sub": str(user_id),
             "type": "access",
             "iss": JWTService.ISSUER,
             "iat": int(now.timestamp()),
-            "exp": int((now + timedelta(minutes = settings.JWT_REFRESH_TOKEN_EXPIRES_MINUTES)).timestamp())
+            "exp": int((now + timedelta(minutes = settings.JWT_REFRESH_TOKEN_EXPIRES_MINUTES)).timestamp()),
+            "jti": str(uuid.uuid4)
         }       
-        return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm = settings.JWT_ALGORITHM)
+
+        return jwt.encode(
+            payload, 
+            settings.JWT_SECRET_KEY, 
+            algorithm = settings.JWT_ALGORITHM
+            )
 
     @staticmethod
     def create_refresh_token(user_id: int) -> str:
-        now = datetime.utcnow()
+        # now = datetime.now(timedelta.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         payload = {
             "sub": str(user_id),

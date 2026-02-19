@@ -5,7 +5,7 @@ from app.domain.chatbot_intents import ChatbotIntent
 
 class GreetingHandler(BaseChatbotHandler):
 
-    async def handle(self, message, user_id, context):
+    async def handle(self, message, user_id, context, uow):
 
         return ChatbotResponse(
             intent = ChatbotIntent.GREETING,

@@ -5,16 +5,20 @@ from app.domain.chatbot_intents import ChatbotIntent
 
 
 class CheckBalanceHandler(BaseChatbotHandler):
-    
-    def __init__(self, get_balance_use_case: GetBalanceUseCase):
-        self._get_balance_user_case = get_balance_use_case
 
-    async def handle(self, message, user_id, context):
+    async def handle(self, message, user_id, context, uow):
 
-        balance = await self._get_balance_user_case.execute(user_id)
+        transport_pass = await uow.transport_passes.get_by_user_id(user_id)
+
+        if not transport_pass:
+            return ChatbotResponse(
+                intent = ChatbotIntent.CHECK_BALANCE,
+                type = ChatbotResponseType.INFO,
+                message = "Você ainda não possui cartão de transporte."
+            )
 
         return ChatbotResponse(
             intent = ChatbotIntent.CHECK_BALANCE,
             type = ChatbotResponseType.INFO,
-            message = f"O seu saldo atual é R${balance:.2f}"
+            message = f"O seu saldo atual é R${transport_pass.balance:.2f}"
         )

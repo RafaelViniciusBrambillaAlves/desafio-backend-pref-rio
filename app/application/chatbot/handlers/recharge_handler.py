@@ -9,31 +9,33 @@ from app.repositories.interfaces.chatbot_context_repository_interface import ICh
 class RechargeHandler(BaseChatbotHandler):
 
     YES = {"sim", "s", "ok", "confirmar"}
-    NO = {"não", "nao", "n", "cancelar"}
+    NO = {"não", "nao", "n"}
+    CANCEL = {"cancelar", "voltar", "sair"}
 
-    def __init__(
-            self, 
-            recharge_use_case: RechargeTransportPassUseCase, 
-            context_repository: IChatbotContextRepository
-        ):
+    def __init__(self, recharge_use_case: RechargeTransportPassUseCase):
         self._recharge_use_case = recharge_use_case
-        self._context_repository = context_repository
 
-    async def handle(self, message, user_id, context):
+    async def handle(self, message, user_id, context, uow):
         
         text = message.lower().strip()
 
         if context.state == ChatbotState.IDLE:
-            context.state = ChatbotState.WAITING_RECHARGE_AMOUNT
-            await self._context_repository.update(context)
 
             return ChatbotResponse(
                 intent = ChatbotIntent.RECHARGE,
                 type = ChatbotResponseType.QUESTION,
-                message = "Qual o valor deseja recarregar?"
+                message = "Qual o valor deseja recarregar?",
+                next_state = ChatbotState.WAITING_RECHARGE_AMOUNT
             )
         
         if context.state == ChatbotState.WAITING_RECHARGE_AMOUNT:
+            if text in self.CANCEL:
+                return ChatbotResponse(
+                    intent = ChatbotIntent.RECHARGE,
+                    type = ChatbotResponseType.INFO,
+                    message = "Recarga cancelada.",
+                    reset_context = True
+                )
 
             try:
                 amount = float(text.replace(",", "."))
@@ -43,43 +45,41 @@ class RechargeHandler(BaseChatbotHandler):
                 return ChatbotResponse(
                     intent = ChatbotIntent.RECHARGE,
                     type = ChatbotResponseType.ERROR,
-                    message = "Informe um valor válido."
+                    message = "Informe um valor válido ou cancele."
                 )
-            
-            context.temp_amount = amount
-            context.state = ChatbotState.CONFIRM_RECHARGE
-            await self._context_repository.update(context)
 
             return ChatbotResponse(
                 intent = ChatbotIntent.RECHARGE,
                 type = ChatbotResponseType.QUESTION,
-                message = f"Confirma recarga de R$ {amount:.2f}? (sim/ não)"
+                message = f"Confirma recarga de R$ {amount:.2f}? (sim/ não)",
+                next_state = ChatbotState.CONFIRM_RECHARGE,
+                temp_amount = amount
             )
         
         if context.state == ChatbotState.CONFIRM_RECHARGE:
 
-            if text in self.YES and context.temp_amount:
+            if text in self.YES and context.temp_amount is not None:
 
                 updated_balance = await self._recharge_use_case.execute(
+                    uow,
                     user_id,
                     context.temp_amount  
                 )
 
-                await self._context_repository.reset(user_id)
-
                 return ChatbotResponse(
                     intent = ChatbotIntent.RECHARGE,
                     type = ChatbotResponseType.INFO, 
-                    message = f"Recarga realizada. Saldo atual: R${updated_balance:.2f}"
+                    message = f"Recarga realizada. Saldo atual: R${updated_balance:.2f}",
+                    reset_context = True
                 )
             
             if text in self.NO:
-                await self._context_repository.reset(user_id)
 
                 return ChatbotResponse(
                     intent = ChatbotIntent.RECHARGE,
                     type = ChatbotResponseType.INFO,
-                    message = "Recarga cancelada"
+                    message = "Recarga cancelada",
+                    reset_context = True
                 )
             
             return ChatbotResponse(

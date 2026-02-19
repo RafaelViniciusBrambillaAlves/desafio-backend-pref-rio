@@ -15,7 +15,8 @@ from app.dependencies.transport_pass_dependecies import get_recharge_use_case
 from app.application.use_cases.transport_pass.recharge_transport_pass_use_case import RechargeTransportPassUseCase
 from app.dependencies.transport_pass_dependecies import get_use_transport_use_case
 from app.application.use_cases.transport_pass.use_transport_pass_use_case import UseTransportPassUseCase 
-
+from app.dependencies.database_dependencies import get_unit_of_work
+from app.repositories.interfaces.unit_of_work_interface import IUnitOfWork
 
 router = APIRouter(prefix = "/transport-pass", tags = ["Transport Pass"])
 
@@ -43,12 +44,17 @@ async def get_balance(
 async def recharge(
     payload: RechargeRequest, 
     current_user: User = Depends(get_current_user),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
     service: RechargeTransportPassUseCase = Depends(get_recharge_use_case)
 ):
-    balance = await service.execute(
-        current_user.id,
-        payload.amount
-    )
+    async with uow:
+
+        balance = await service.execute(
+            uow,
+            current_user.id,
+            payload.amount
+        )
+
     return SucessResponse(
         message = "Recharge successful",
         data = BalanceResponse(balance = balance)

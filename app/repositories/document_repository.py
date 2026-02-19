@@ -6,7 +6,7 @@ from app.repositories.interfaces.documents_repository_interface import IDocument
 from minio import Minio
 from fastapi.concurrency import run_in_threadpool
 
-class DocumentRepository(IDocumentRepository):
+class MinioDocumentStorage(IDocumentRepository):
 
     def __init__(self, client: Minio):
         self._client = client

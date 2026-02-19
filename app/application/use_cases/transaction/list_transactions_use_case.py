@@ -1,17 +1,19 @@
 from app.repositories.interfaces.transaction_repository_interface import ITransactionRepository
 from bson import ObjectId
 from app.schemas.transaction import TransactionResponse
+from app.repositories.interfaces.unit_of_work_interface import IUnitOfWork
 
 
 class ListTransactionsUseCase:
 
-    def __init__(self, repository: ITransactionRepository):
-        self._repository = repository
+    def __init__(self, uow: IUnitOfWork):
+        self._uow = uow
 
     async def execute(self, user_id: ObjectId):
+        
+        async with self._uow:
 
-        transactions = await self._repository.list_by_user(user_id)
-
+            transactions = await self._uow.transactions.list_by_user(user_id)
         return [
             TransactionResponse(
                 id = str(tx.id),
