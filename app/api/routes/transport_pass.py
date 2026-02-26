@@ -27,9 +27,9 @@ router = APIRouter(prefix = "/transport-pass", tags = ["Transport Pass"])
 )
 async def get_balance(
     current_user: User = Depends(get_current_user),
-    service: GetBalanceUseCase = Depends(get_balance_use_case)
+    use_case: GetBalanceUseCase = Depends(get_balance_use_case)
 ):
-    balance = await service.execute(current_user.id)
+    balance = await use_case.execute(current_user.id)
 
     return SucessResponse(
         message = "Balance retrieved successfully.",
@@ -45,12 +45,12 @@ async def recharge(
     payload: RechargeRequest, 
     current_user: User = Depends(get_current_user),
     uow: IUnitOfWork = Depends(get_unit_of_work),
-    service: RechargeTransportPassUseCase = Depends(get_recharge_use_case)
+    use_case: RechargeTransportPassUseCase = Depends(get_recharge_use_case)
 ):
-    async with uow:
 
-        balance = await service.execute(
-            uow,
+    async with uow:
+        
+        balance = await use_case.execute(
             current_user.id,
             payload.amount
         )
@@ -68,9 +68,11 @@ async def recharge(
 async def use_transport(
     payload: DebitRequest, 
     current_user: User = Depends(get_current_user),
-    service: UseTransportPassUseCase = Depends(get_use_transport_use_case)
+    uow: IUnitOfWork = Depends(get_unit_of_work),
+    use_case: UseTransportPassUseCase = Depends(get_use_transport_use_case)
 ):
-    balance = await service.execute(
+     
+    balance = await use_case.execute(
         current_user.id,
         payload.amount
     )

@@ -15,8 +15,14 @@ class TransportPassRepository(BaseMongoRepository, ITransportPassRepository):
 
     async def create(self, user_id: ObjectId) -> TransportPass:
         transport_pass = TransportPass(user_id = user_id)
+
+        data = transport_pass.model_dump(
+            by_alias = True,
+            exclude = {"id"}
+        )
+
         result = await self._db.transport_pass.insert_one(
-            transport_pass.model_dump(by_alias = True),
+            data,
             session = self._session
         )
         transport_pass.id = result.inserted_id

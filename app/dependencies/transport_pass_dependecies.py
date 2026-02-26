@@ -13,10 +13,9 @@ def get_balance_use_case(
 
 
 def get_recharge_use_case(
-    # uow: IUnitOfWork = Depends(get_unit_of_work)
+    uow: IUnitOfWork = Depends(get_unit_of_work)
 ):
-    # return RechargeTransportPassUseCase(uow)
-    return RechargeTransportPassUseCase()
+    return RechargeTransportPassUseCase(uow)
 
 
 def get_use_transport_use_case(
