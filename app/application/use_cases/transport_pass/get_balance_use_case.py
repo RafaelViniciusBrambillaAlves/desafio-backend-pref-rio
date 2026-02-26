@@ -7,9 +7,6 @@ class GetBalanceUseCase:
         self._uow = uow
 
     async def execute(self, user_id: ObjectId) -> float:
-        
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
 
         async with self._uow:
             transport_pass = await self._uow.transport_passes.get_by_user_id(user_id)

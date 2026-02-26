@@ -13,9 +13,6 @@ class RechargeTransportPassUseCase:
         self._uow = uow
  
     async def execute(self, user_id: ObjectId, amount: float) -> float:
-        
-        if isinstance(user_id, str):
-            user_id = ObjectId(user_id)
             
         if amount <= 0:
             raise AppException(
