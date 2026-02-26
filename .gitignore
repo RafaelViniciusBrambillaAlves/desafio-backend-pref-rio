@@ -1,3 +1,5 @@
 .env
 teste.py
 _.txt
+.coverage
+__init__.py
