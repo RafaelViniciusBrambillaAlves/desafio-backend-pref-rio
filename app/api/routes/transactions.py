@@ -16,9 +16,9 @@ router = APIRouter( prefix = "/transactions", tags = ["Transactions"])
 )
 async def get_transactions(
     current_user: User = Depends(get_current_user),
-    use_caes: ListTransactionsUseCase = Depends(get_list_transaction_use_case)
+    use_case: ListTransactionsUseCase = Depends(get_list_transaction_use_case)
 ):
-    transactions = await use_caes.execute(current_user.id)
+    transactions = await use_case.execute(current_user.id)
 
     return SucessResponse(
         message = "Transactions retrieved successfully",
