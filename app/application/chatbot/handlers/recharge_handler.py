@@ -61,7 +61,6 @@ class RechargeHandler(BaseChatbotHandler):
             if text in self.YES and context.temp_amount is not None:
 
                 updated_balance = await self._recharge_use_case.execute(
-                    uow,
                     user_id,
                     context.temp_amount  
                 )
