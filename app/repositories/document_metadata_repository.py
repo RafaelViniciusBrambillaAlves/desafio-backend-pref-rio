@@ -1,7 +1,6 @@
 from app.models.document import Document
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pymongo.client_session import ClientSession
 from app.repositories.base_repository import BaseMongoRepository
 
 class DocumentMetadataRepository(BaseMongoRepository):

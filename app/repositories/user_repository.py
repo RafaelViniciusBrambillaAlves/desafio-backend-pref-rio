@@ -3,7 +3,6 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from app.repositories.interfaces.user_repository_interface import IUserRepository
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from pymongo.client_session import ClientSession
 from app.repositories.base_repository import BaseMongoRepository
 class MongoUserRepository(BaseMongoRepository, IUserRepository):
     
@@ -12,8 +11,10 @@ class MongoUserRepository(BaseMongoRepository, IUserRepository):
     
     
     async def create(self, user: User) -> User:
+        data = user.model_dump(by_alias = True, exclude = {"id"}, exclude_none = True)
+
         result = await self._db.user.insert_one(
-            user.model_dump(by_alias = True, exclude_none=True),
+            data,
             session = self._session
         )
         user.id = result.inserted_id
@@ -24,7 +25,13 @@ class MongoUserRepository(BaseMongoRepository, IUserRepository):
             {"email": email},
             session = self._session
         )
-        return User(**data) if data else None
+        if not data:
+            return None
+
+        if isinstance(data["_id"], str):
+            data["_id"] = ObjectId(data["_id"])
+
+        return User(**data)
     
     async def get_by_id(self, id: str) -> User | None:
         try:
