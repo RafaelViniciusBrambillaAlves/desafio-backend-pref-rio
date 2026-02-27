@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict, field_serializer
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, UTC
 
 class Document(BaseModel):
     model_config = ConfigDict(
@@ -11,8 +11,4 @@ class Document(BaseModel):
     user_id: ObjectId
     object_name: str
     content_type: str
-    created_at: datetime = Field(default_factory = datetime.utcnow)
-
-    @field_serializer("id", "user_id")
-    def serialize_objectid(self, value: ObjectId):
-        return str(value) if value else None
+    created_at: datetime = Field(default_factory = lambda: datetime.now(UTC))
