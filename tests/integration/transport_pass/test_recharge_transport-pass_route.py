@@ -36,7 +36,6 @@ async def test_recharge_route_success(amount, expected_status, expected_balance)
     async def override_get_current_user():
         return fake_user
    
-
     # Mock Uow
     mock_uow = AsyncMock()
     mock_uow.__aenter__.return_value = mock_uow
@@ -44,7 +43,6 @@ async def test_recharge_route_success(amount, expected_status, expected_balance)
 
     async def override_get_uow():
         return mock_uow
-
 
     # Mock Use Case
     mock_use_case = AsyncMock()
@@ -60,8 +58,7 @@ async def test_recharge_route_success(amount, expected_status, expected_balance)
 
     async def override_get_use_case():
         return mock_use_case
-    
-    
+     
     # Overrides 
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_unit_of_work] = override_get_uow

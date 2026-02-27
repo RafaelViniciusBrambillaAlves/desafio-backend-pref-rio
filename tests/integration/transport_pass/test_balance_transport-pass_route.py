@@ -25,7 +25,6 @@ async def test_get_balance_route_sucess(mock_balance):
     async def override_get_current_user():
         return fake_user
     
-
     # Mock Use Case
     mock_use_case = AsyncMock()
     mock_use_case.execute.return_value = mock_balance
@@ -33,7 +32,6 @@ async def test_get_balance_route_sucess(mock_balance):
     async def override_get_use_case():
         return mock_use_case
     
-
     # Overrides
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_balance_use_case] = override_get_use_case
@@ -46,7 +44,6 @@ async def test_get_balance_route_sucess(mock_balance):
     ) as client:
         response = await client.get("/transport-pass/balance")
 
-    
     # Asserts
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["data"]["balance"] == mock_balance
