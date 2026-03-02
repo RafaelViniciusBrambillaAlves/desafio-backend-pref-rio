@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import status
 
 @pytest.mark.asyncio
-async def test_delete_user_sucess():
+async def test_delete_user_sucess(client):
 
     user_id = ObjectId()
 
@@ -35,22 +35,19 @@ async def test_delete_user_sucess():
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_delete_user_use_case] = override_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.delete("/users/me")
 
-    assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK
 
-    body = response.json()
+        body = response.json()
 
-    assert body["data"]["id"] == str(user_id)
-    assert body["data"]["email"] == deleted_user.email
+        assert body["data"]["id"] == str(user_id)
+        assert body["data"]["email"] == deleted_user.email
 
-    mock_use_case.execute.assert_called_once_with(user_id)
+        mock_use_case.execute.assert_called_once_with(user_id)
+    
+    finally:
 
-    app.dependency_overrides.clear()
+        app.dependency_overrides.clear()
 

@@ -15,7 +15,7 @@ from app.application.use_cases.document.list_user_documents_use_case import List
     "documents_count",
     [0, 2]
 )
-async def test_list_my_document_sucess(documents_count: int):
+async def test_list_my_document_sucess(client, documents_count: int):
 
     user_id = ObjectId()
 
@@ -38,32 +38,29 @@ async def test_list_my_document_sucess(documents_count: int):
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_list_user_documents_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.get(
             "/users/me/documents"
         )
 
-    assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK
 
-    body = response.json()
+        body = response.json()
 
-    assert body["message"] == "Documents listed successfully."
-    assert "data" in body
-    assert "documents" in body["data"]
+        assert body["message"] == "Documents listed successfully."
+        assert "data" in body
+        assert "documents" in body["data"]
 
-    returned_documents = body["data"]["documents"]
+        returned_documents = body["data"]["documents"]
 
-    assert len(returned_documents) == documents_count
+        assert len(returned_documents) == documents_count
 
-    if documents_count > 0:
-        assert returned_documents[0]["path"] == documents[0].object_name
+        if documents_count > 0:
+            assert returned_documents[0]["path"] == documents[0].object_name
 
-    mock_use_case.execute.assert_awaited_once_with(user_id = user_id)
+        mock_use_case.execute.assert_awaited_once_with(user_id = user_id)
 
-    app.dependency_overrides.clear()
+    finally:
+
+        app.dependency_overrides.clear()
 

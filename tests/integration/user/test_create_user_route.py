@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import status
 
 @pytest.mark.asyncio
-async def test_create_user_success():
+async def test_create_user_success(client):
 
     user_payload = {
         "email": "test@test.com",
@@ -28,24 +28,21 @@ async def test_create_user_success():
     
     app.dependency_overrides[get_create_user_use_case] = override_get_create_user_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.post(
             "/users/",
             json = user_payload
         )
 
-    assert response.status_code == status.HTTP_201_CREATED
-    
-    body = response.json()
+        assert response.status_code == status.HTTP_201_CREATED
+        
+        body = response.json()
 
-    assert body["data"]["email"] == user_payload["email"]
-    assert body["data"]["id"] is not None
+        assert body["data"]["email"] == user_payload["email"]
+        assert body["data"]["id"] is not None
+        
+        mock_use_case.execute.assert_called_once()
     
-    mock_use_case.execute.assert_called_once()
+    finally:
 
-    app.dependency_overrides.clear()
+        app.dependency_overrides.clear()

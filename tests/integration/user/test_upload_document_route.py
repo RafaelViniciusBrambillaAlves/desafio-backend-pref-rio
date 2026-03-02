@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import status
 
 @pytest.mark.asyncio
-async def test_upload_cnh_photo_route_success():
+async def test_upload_cnh_photo_route_success(client):
 
     user_id = ObjectId()
 
@@ -31,21 +31,18 @@ async def test_upload_cnh_photo_route_success():
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_upload_document_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.post(
             "/users/me/cnh-photo",
             files = {"file": ("file.png", b"fake-image", "image/png")}
         )
 
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["message"] == "Document upload successfuly."
-    assert response.json()["data"]["path"] == "documents/test/file.png"
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["message"] == "Document upload successfuly."
+        assert response.json()["data"]["path"] == "documents/test/file.png"
 
-    mock_use_case.execute.assert_awaited_once()
+        mock_use_case.execute.assert_awaited_once()
 
-    app.dependency_overrides.clear()
+    finally:
+
+        app.dependency_overrides.clear()

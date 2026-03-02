@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from fastapi import status
 
 @pytest.mark.asyncio
-async def test_get_route_success():
+async def test_get_route_success(client):
 
     fake_authenticated_user  = User(
         id = ObjectId(),
@@ -35,25 +35,22 @@ async def test_get_route_success():
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_get_user_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.get(f"/users/{str(user_id)}")
 
     
-    assert response.status_code == status.HTTP_200_OK
-    
-    body = response.json()
+        assert response.status_code == status.HTTP_200_OK
+        
+        body = response.json()
 
-    assert body["data"]["id"] == str(user_id)
-    assert body["data"]["email"] == returned_user.email
+        assert body["data"]["id"] == str(user_id)
+        assert body["data"]["email"] == returned_user.email
 
-    mock_use_case.execute.assert_called_once_with(str(user_id))
+        mock_use_case.execute.assert_called_once_with(str(user_id))
 
-    app.dependency_overrides.clear()
+    finally:
+
+        app.dependency_overrides.clear()
 
 
 
