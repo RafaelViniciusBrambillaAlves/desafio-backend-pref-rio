@@ -16,12 +16,8 @@ from fastapi import status
         (1000, 1, 999)
     ]
 )
-async def test_use_transport_pass_success(initial_balance, debit_amount, expected_balance):
+async def test_use_transport_pass_success(initial_balance, debit_amount, expected_balance, mock_uow):
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     transport_pass = TransportPass(
         user_id = user_id,
@@ -57,11 +53,9 @@ async def test_use_transport_pass_success(initial_balance, debit_amount, expecte
     "debit_value", 
     [0, -1, -100, -4243]
 )
-async def test_use_transport_pass_invalid_amount(debit_value):
+async def test_use_transport_pass_invalid_amount(debit_value, mock_uow):
 
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
 
     use_case = UseTransportPassUseCase(mock_uow)
 
@@ -73,13 +67,9 @@ async def test_use_transport_pass_invalid_amount(debit_value):
 
 
 @pytest.mark.asyncio
-async def test_use_transport_pass_not_found():
+async def test_use_transport_pass_not_found(mock_uow):
 
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.transport_passes.get_by_user_id = AsyncMock(return_value = None)
 
@@ -101,13 +91,9 @@ async def test_use_transport_pass_not_found():
         (1, 1000)
     ]
 )
-async def test_use_transport_pass_insufficient_balance(initial_balance, debit_amount):
+async def test_use_transport_pass_insufficient_balance(initial_balance, debit_amount, mock_uow):
 
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     transport_pass = TransportPass(
         user_id = user_id,

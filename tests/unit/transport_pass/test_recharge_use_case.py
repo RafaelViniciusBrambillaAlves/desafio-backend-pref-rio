@@ -17,21 +17,20 @@ from fastapi import status
         (1000, 1, 1001)
     ]
     )
-async def test_recharge_sucess(initial_balance, recharge_amount, expected_balance):
+async def test_recharge_sucess(initial_balance, recharge_amount, expected_balance, mock_uow):
     """
     Testando Classe RechargeTransportPassUseCase para recarregar saldo do passe
     """
 
-    # Banco Falso
-    uow = AsyncMock()
+    # Banco Falso: mock_uow
 
     user_id = ObjectId()
 
     # Cria o objeto que tem a regra
-    use_case = RechargeTransportPassUseCase(uow)
+    use_case = RechargeTransportPassUseCase(mock_uow)
 
     # Quando alguém chamar get_by_user_id, finja que o usuário tem saldo 100
-    uow.transport_passes.get_by_user_id = AsyncMock(
+    mock_uow.transport_passes.get_by_user_id = AsyncMock(
         return_value = TransportPass(user_id = user_id, balance = initial_balance)
     )
 
@@ -42,42 +41,41 @@ async def test_recharge_sucess(initial_balance, recharge_amount, expected_balanc
         )
 
     # Quando atualizar o saldo, retorne um passe com saldo 150
-    uow.transport_passes.update_balance = AsyncMock(
+    mock_uow.transport_passes.update_balance = AsyncMock(
         side_effect = fake_update_balance
     )
 
-    uow.transactions.create = AsyncMock()
+    mock_uow.transactions.create = AsyncMock()
 
     # Execute a recarga de 50 reais.
     result = await use_case.execute(user_id, recharge_amount)
 
     assert result == expected_balance 
 
-    uow.transport_passes.update_balance.assert_called_once_with(
+    mock_uow.transport_passes.update_balance.assert_called_once_with(
         user_id = user_id,
         amount = recharge_amount
     )
 
     # Confirma que realmente tentou atualizar no banco e criou a transação
-    uow.transport_passes.update_balance.assert_called_once()
-    uow.transactions.create.assert_called_once()
+    mock_uow.transport_passes.update_balance.assert_called_once()
+    mock_uow.transactions.create.assert_called_once()
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "invalid_amount", 
     [0, -10, -1, -4543]
     )
-async def test_recharge_invalid_amount(invalid_amount):
+async def test_recharge_invalid_amount(invalid_amount, mock_uow):
     """
     Testando amount invalido
     """
     
-    # Banco Falso
-    uow = AsyncMock()
+    # Banco Falso: mock_uow
 
     user_id = ObjectId()
 
-    use_case = RechargeTransportPassUseCase(uow)
+    use_case = RechargeTransportPassUseCase(mock_uow)
 
     with pytest.raises(AppException) as exc:
         await use_case.execute(user_id, invalid_amount)
@@ -94,23 +92,22 @@ async def test_recharge_invalid_amount(invalid_amount):
         (2, 2)
     ]
 )
-async def test_recharge_creates_transport_pass_if_not_exists(recharge_amount, expected_balance):
+async def test_recharge_creates_transport_pass_if_not_exists(recharge_amount, expected_balance, mock_uow):
     """
     Testado se o usário não tiver passe
     """
     
-    # Banco Falso
-    uow = AsyncMock()
+    # Banco Falso: mock_uow
 
     user_id = ObjectId()
 
-    use_case = RechargeTransportPassUseCase(uow)
+    use_case = RechargeTransportPassUseCase(mock_uow)
 
     # Não existe passe
-    uow.transport_passes.get_by_user_id = AsyncMock(return_value = None)
+    mock_uow.transport_passes.get_by_user_id = AsyncMock(return_value = None)
 
     # Quando criar, começa com saldo 0
-    uow.transport_passes.create = AsyncMock(
+    mock_uow.transport_passes.create = AsyncMock(
         return_value = TransportPass(user_id = user_id, balance = 0)
     )
 
@@ -120,16 +117,16 @@ async def test_recharge_creates_transport_pass_if_not_exists(recharge_amount, ex
             balance = amount 
         )
 
-    uow.transport_passes.update_balance = AsyncMock(
+    mock_uow.transport_passes.update_balance = AsyncMock(
         side_effect = fake_update_balance
     )
 
-    uow.transactions.create = AsyncMock()
+    mock_uow.transactions.create = AsyncMock()
 
     result = await use_case.execute(user_id, recharge_amount)
 
     assert result == expected_balance
 
-    uow.transport_passes.create.assert_called_once()
-    uow.transport_passes.update_balance.assert_called_once()
-    uow.transactions.create.assert_called_once()
+    mock_uow.transport_passes.create.assert_called_once()
+    mock_uow.transport_passes.update_balance.assert_called_once()
+    mock_uow.transactions.create.assert_called_once()

@@ -10,13 +10,9 @@ from app.models.transport_pass import TransportPass
     "existing_balance",
     [0, 10, 150, 999]
 )
-async def test_get_balance_existing_transport_pass(existing_balance):
+async def test_get_balance_existing_transport_pass(existing_balance, mock_uow):
 
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.transport_passes.get_by_user_id = AsyncMock(
         return_value = TransportPass(
@@ -35,13 +31,9 @@ async def test_get_balance_existing_transport_pass(existing_balance):
     mock_uow.transport_passes.create.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_get_balance_creates_transport_pass_if_not_exists():
+async def test_get_balance_creates_transport_pass_if_not_exists(mock_uow):
 
     user_id = ObjectId()
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.transport_passes.get_by_user_id = AsyncMock(return_value = None)
 
