@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.routes import users, auth, teste, transport_pass, chatbot, transactions
+from app.api.routes import users, auth, transport_pass, chatbot, transactions
 from app.core.database import MongoDatabase
 from contextlib import asynccontextmanager
 
