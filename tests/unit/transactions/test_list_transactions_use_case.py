@@ -18,7 +18,7 @@ from tests.factories.transaction_factory import transaction_factory
         ]
     ]
 )
-async def test_list_transactions(transactions_input):
+async def test_list_transactions(transactions_input, mock_uow):
     
     user_id = ObjectId()
 
@@ -26,10 +26,6 @@ async def test_list_transactions(transactions_input):
     transactions = [
         transaction_factory(**tx_data) for tx_data in transactions_input
     ]
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.transactions.list_by_user = AsyncMock(
         return_value = transactions
