@@ -9,11 +9,7 @@ from app.core.security import Security
 
 
 @pytest.mark.asyncio
-async def test_create_user_success():
-    
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
+async def test_create_user_success(mock_uow):
 
     mock_uow.users.get_by_email.return_value = None
 
@@ -37,11 +33,7 @@ async def test_create_user_success():
 
 
 @pytest.mark.asyncio
-async def test_create_user_email_invalid():
-    
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
+async def test_create_user_email_invalid(mock_uow):
 
     existing_user = User(email = "test@test.com", password = "hashed")
 
@@ -62,12 +54,8 @@ async def test_create_user_email_invalid():
 
 
 @pytest.mark.asyncio
-async def test_create_user_password_is_hashed():
+async def test_create_user_password_is_hashed(mock_uow):
     
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
-
     mock_uow.users.get_by_email.return_value = None
 
     async def create_side_effect(user):

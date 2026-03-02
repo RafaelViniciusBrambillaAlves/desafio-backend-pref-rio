@@ -7,13 +7,9 @@ from app.core.exceptions import AppException
 from fastapi import status
 
 @pytest.mark.asyncio
-async def test_delete_user_success():
+async def test_delete_user_success(mock_uow):
 
     user_id = str(ObjectId())
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     deleted_user = User(
         id = ObjectId(),
@@ -33,13 +29,9 @@ async def test_delete_user_success():
     assert result.email == deleted_user.email
 
 @pytest.mark.asyncio
-async def test_delete_user_not_found():
+async def test_delete_user_not_found(mock_uow):
 
     user_id = str(ObjectId())
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.users.delete_by_id.return_value = None
 

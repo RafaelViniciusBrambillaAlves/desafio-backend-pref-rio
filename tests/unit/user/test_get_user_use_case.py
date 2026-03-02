@@ -8,7 +8,7 @@ from app.core.exceptions import AppException
 
 
 @pytest.mark.asyncio
-async def test_get_existing_user():
+async def test_get_existing_user(mock_uow):
     
     # Fake User
     user_id = str(ObjectId())
@@ -17,10 +17,6 @@ async def test_get_existing_user():
         id = ObjectId(user_id),
         email = "test@test.com"
     )
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_valur = None
 
     mock_uow.users.get_by_id = AsyncMock(
         return_value = expected_user
@@ -36,13 +32,9 @@ async def test_get_existing_user():
 
 
 @pytest.mark.asyncio
-async def test_get_not_existing_user():
+async def test_get_not_existing_user(mock_uow):
     
     user_id = str(ObjectId())
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.users.get_by_id = AsyncMock(
         return_value = None
