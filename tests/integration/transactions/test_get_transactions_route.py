@@ -30,7 +30,7 @@ from datetime import datetime, UTC
         
     ]
 )
-async def test_get_route_sucess(transactions_input, expected_status):
+async def test_get_route_sucess(client, transactions_input, expected_status):
 
     # Mock Fake User
     fake_user = User(
@@ -60,25 +60,21 @@ async def test_get_route_sucess(transactions_input, expected_status):
     async def override_get_use_case():
         return mock_use_case
     
-
     # Overrides
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_list_transaction_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try:
         response = await client.get("/transactions/")
 
-    
-    # Assertions 
-    assert response.status_code == expected_status
-    assert response.json()["data"] == [
-        tx.model_dump(mode="json") for tx in transactions
-    ]
+        # Assertions 
+        assert response.status_code == expected_status
+        assert response.json()["data"] == [
+            tx.model_dump(mode="json") for tx in transactions
+        ]
 
-    mock_use_case.execute.assert_called_once_with(fake_user.id)
-    app.dependency_overrides.clear()
+        mock_use_case.execute.assert_called_once_with(fake_user.id)
+
+    finally:
+        
+        app.dependency_overrides.clear()
