@@ -11,17 +11,13 @@ from tests.factories.document_factory import make_document
     "documents_count",
     [2, 0]
 )
-async def test_list_documents_success(documents_count):
+async def test_list_documents_success(documents_count, mock_uow):
 
     user_id = ObjectId()
 
     documents = [
         make_document(user_id) for _ in range(documents_count)
     ]
-
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     mock_uow.documents = AsyncMock()
     mock_uow.documents.list_by_user = AsyncMock(return_value = documents)
