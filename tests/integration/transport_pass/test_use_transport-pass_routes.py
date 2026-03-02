@@ -17,11 +17,11 @@ from httpx import AsyncClient, ASGITransport
     [
         (5, status.HTTP_200_OK, 95),
         (1, status.HTTP_200_OK, 99),
-        (0, status.HTTP_422_UNPROCESSABLE_ENTITY, None),
-        (-10, status.HTTP_422_UNPROCESSABLE_ENTITY, None)
+        (0, status.HTTP_422_UNPROCESSABLE_CONTENT, None),
+        (-10, status.HTTP_422_UNPROCESSABLE_CONTENT, None)
     ]
 )
-async def test_use_transport_route(amount, expected_status, expected_balance):
+async def test_use_transport_route(client, mock_uow, amount, expected_status, expected_balance):
     """
     Testando rota:
     POST /transport-pass/use
@@ -35,11 +35,6 @@ async def test_use_transport_route(amount, expected_status, expected_balance):
 
     async def override_get_current_user():
         return fake_user
-    
-    # Mock Uow
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
 
     async def override_get_uow():
         return mock_uow
@@ -64,28 +59,23 @@ async def test_use_transport_route(amount, expected_status, expected_balance):
     app.dependency_overrides[get_unit_of_work] = override_get_uow
     app.dependency_overrides[get_use_transport_use_case] = override_get_use_case
 
-    # Request
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport, 
-        base_url = "http://test"
-    ) as client:
-        
+    try:
         response = await client.post(
             "/transport-pass/use",
             json = {"amount": amount}
         )
 
-    # Assertions
-    assert response.status_code == expected_status
+        # Assertions
+        assert response.status_code == expected_status
 
-    if expected_status == status.HTTP_200_OK:
-        assert response.json()["data"]["balance"] == expected_balance
+        if expected_status == status.HTTP_200_OK:
+            assert response.json()["data"]["balance"] == expected_balance
 
-        mock_use_case.execute.assert_called_once_with(
-            fake_user.id,
-            amount
-        )
+            mock_use_case.execute.assert_called_once_with(
+                fake_user.id,
+                amount
+            )
 
-    app.dependency_overrides.clear()
+    finally:
+        
+        app.dependency_overrides.clear()

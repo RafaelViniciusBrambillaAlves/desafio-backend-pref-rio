@@ -21,7 +21,7 @@ from app.core.exceptions import AppException
         (-5, status.HTTP_400_BAD_REQUEST, None)
     ]
 )
-async def test_recharge_route_success(amount, expected_status, expected_balance):
+async def test_recharge_route_success(client, mock_uow, amount, expected_status, expected_balance):
     """
     Testando Rota 
     - '/transport-pass/recharge'
@@ -36,11 +36,6 @@ async def test_recharge_route_success(amount, expected_status, expected_balance)
     async def override_get_current_user():
         return fake_user
    
-    # Mock Uow
-    mock_uow = AsyncMock()
-    mock_uow.__aenter__.return_value = mock_uow
-    mock_uow.__aexit__.return_value = None
-
     async def override_get_uow():
         return mock_uow
 
@@ -64,28 +59,23 @@ async def test_recharge_route_success(amount, expected_status, expected_balance)
     app.dependency_overrides[get_unit_of_work] = override_get_uow
     app.dependency_overrides[get_recharge_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
-        
+    try:     
         response = await client.post(
             "/transport-pass/recharge",
             json = {"amount": amount}
         )
 
+        # Asserts 
+        assert response.status_code == expected_status
 
-    # Asserts 
-    assert response.status_code == expected_status
-
-    if expected_status == status.HTTP_200_OK:
-        assert response.json()["data"]["balance"] == expected_balance
-        mock_use_case.execute.assert_called_once_with(
-            fake_user.id,
-            amount
-        )
+        if expected_status == status.HTTP_200_OK:
+            assert response.json()["data"]["balance"] == expected_balance
+            mock_use_case.execute.assert_called_once_with(
+                fake_user.id,
+                amount
+            )
     
-    app.dependency_overrides.clear()
+    finally:
+    
+        app.dependency_overrides.clear()
     

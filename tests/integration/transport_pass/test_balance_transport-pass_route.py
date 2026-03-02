@@ -14,7 +14,7 @@ from fastapi import status
     "mock_balance",
     [0, 10, 200, 999]
 )
-async def test_get_balance_route_sucess(mock_balance):
+async def test_get_balance_route_sucess(client, mock_balance):
 
     # Mock Fake User
     fake_user = User(
@@ -36,18 +36,15 @@ async def test_get_balance_route_sucess(mock_balance):
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_balance_use_case] = override_get_use_case
 
-    transport = ASGITransport(app = app)
-
-    async with AsyncClient(
-        transport = transport,
-        base_url = "http://test"
-    ) as client:
+    try: 
         response = await client.get("/transport-pass/balance")
 
-    # Asserts
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["data"]["balance"] == mock_balance
+        # Asserts
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["data"]["balance"] == mock_balance
 
-    mock_use_case.execute.assert_called_once_with(fake_user.id)
+        mock_use_case.execute.assert_called_once_with(fake_user.id)
 
-    app.dependency_overrides.clear()
+    finally:
+
+        app.dependency_overrides.clear()
