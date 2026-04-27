@@ -1,5 +1,14 @@
 # 🚍 Sistema de Gestão de Passe de Transporte
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![OAuth2](https://img.shields.io/badge/OAuth2-3C3C3C?style=for-the-badge&logo=auth0&logoColor=white)
+![MinIO](https://img.shields.io/badge/MinIO-C72E49?style=for-the-badge&logo=minio&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
 Este projeto foi desenvolvido com base no desafio Desafio Técnico – Desenvolvedor(a) Back-end Sênior, disponível em: ([repositório oficial do desafio](https://github.com/prefeitura-rio/desafio-senior-backend-developer)) 
 
 API backend completa para gestão de passe de transporte digital,
